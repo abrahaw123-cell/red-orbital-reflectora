@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Red Orbital Reflectora — Sistema Ei</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #03080f;
+    --panel: #07111d;
+    --border: #0a2540;
+    --a-grav: #4fc3f7;
+    --b-luz: #ffd54f;
+    --c-mat: #81c784;
+    --d-ia: #ce93d8;
+    --ei: #ff6e40;
+    --text: #c9d8e8;
+    --dim: #4a6a8a;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* starfield */
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background-image:
+      radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 30% 70%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 55% 15%, rgba(255,255,255,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 80%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 85% 40%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 20% 90%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 10%, rgba(255,255,255,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 45% 55%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 65% 35%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 5% 50%, rgba(255,255,255,0.4) 0%, transparent 100%);
+    pointer-events:none;
+    z-index:0;
+  }
+
+  header {
+    position: relative; z-index:2;
+    text-align:center;
+    padding: 40px 20px 24px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(255,110,64,0.06) 0%, transparent 100%);
+  }
+
+  header h1 {
+    font-family:'Orbitron', sans-serif;
+    font-size: clamp(1.2rem, 4vw, 2.4rem);
+    font-weight:900;
+    letter-spacing:4px;
+    color:#fff;
+    text-shadow: 0 0 30px rgba(255,110,64,0.6);
+  }
+
+  header p {
+    margin-top:8px;
+    font-size:0.72rem;
+    color:var(--dim);
+    letter-spacing:2px;
+    text-transform:uppercase;
+  }
+
+  .ei-badge {
+    display:inline-block;
+    margin-top:16px;
+    padding:6px 20px;
+    background: rgba(255,110,64,0.12);
+    border:1px solid rgba(255,110,64,0.4);
+    border-radius:2px;
+    font-size:0.7rem;
+    color:var(--ei);
+    letter-spacing:3px;
+  }
+
+  /* LAYOUT */
+  .main {
+    position:relative; z-index:1;
+    max-width:1300px;
+    margin:0 auto;
+    padding:30px 16px;
+    display:grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-rows: auto auto auto;
+    gap:14px;
+  }
+
+  /* Legend */
+  .legend {
+    grid-column: 1/-1;
+    display:flex; gap:20px; flex-wrap:wrap;
+    padding:12px 20px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:4px;
+  }
+  .legend-item {
+    display:flex; align-items:center; gap:8px;
+    font-size:0.65rem; letter-spacing:1px; text-transform:uppercase;
+  }
+  .legend-dot { width:10px; height:10px; border-radius:50%; }
+
+  /* GROUP COLUMNS */
+  .group {
+    background: var(--panel);
+    border:1px solid var(--border);
+    border-radius:4px;
+    overflow:hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .group:hover { transform:translateY(-2px); box-shadow:0 8px 40px rgba(0,0,0,0.4); }
+
+  .group-header {
+    padding:14px 16px 12px;
+    font-family:'Orbitron', sans-serif;
+    font-size:0.65rem;
+    letter-spacing:3px;
+    font-weight:700;
+    border-bottom:2px solid;
+    display:flex; align-items:center; gap:10px;
+  }
+
+  .group-a .group-header { color:var(--a-grav); border-color:var(--a-grav); background:rgba(79,195,247,0.06); }
+  .group-b .group-header { color:var(--b-luz);  border-color:var(--b-luz);  background:rgba(255,213,79,0.06); }
+  .group-c .group-header { color:var(--c-mat);  border-color:var(--c-mat);  background:rgba(129,199,132,0.06); }
+  .group-d .group-header { color:var(--d-ia);   border-color:var(--d-ia);   background:rgba(206,147,216,0.06); }
+
+  .group-icon { font-size:1.1rem; }
+
+  .eq-list { padding:10px 0; }
+
+  .eq-item {
+    padding:10px 16px;
+    border-bottom:1px solid rgba(255,255,255,0.04);
+    cursor:pointer;
+    transition:background 0.15s;
+    position:relative;
+  }
+  .eq-item:last-child { border-bottom:none; }
+  .eq-item:hover { background:rgba(255,255,255,0.04); }
+  .eq-item.active { background:rgba(255,255,255,0.07); }
+
+  .eq-num {
+    font-size:0.55rem;
+    letter-spacing:2px;
+    color:var(--dim);
+    margin-bottom:3px;
+  }
+  .eq-name {
+    font-size:0.72rem;
+    font-weight:700;
+    line-height:1.3;
+  }
+  .eq-role {
+    font-size:0.6rem;
+    color:var(--dim);
+    margin-top:3px;
+    line-height:1.4;
+    display:none;
+  }
+  .eq-item.active .eq-role { display:block; color:var(--text); }
+
+  .group-a .eq-item.active .eq-name { color:var(--a-grav); }
+  .group-b .eq-item.active .eq-name { color:var(--b-luz); }
+  .group-c .eq-item.active .eq-name { color:var(--c-mat); }
+  .group-d .eq-item.active .eq-name { color:var(--d-ia); }
+
+  /* FLOW DIAGRAM */
+  .flow-row {
+    grid-column:1/-1;
+  }
+
+  .flow-box {
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:20px;
+  }
+
+  .flow-title {
+    font-family:'Orbitron',sans-serif;
+    font-size:0.6rem;
+    letter-spacing:3px;
+    color:var(--ei);
+    margin-bottom:16px;
+    text-align:center;
+  }
+
+  .flow {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:6px;
+  }
+
+  .flow-group {
+    display:flex; flex-direction:column;
+    align-items:center;
+    gap:4px;
+  }
+
+  .flow-group-label {
+    font-size:0.55rem; letter-spacing:2px; text-transform:uppercase;
+    opacity:0.7;
+  }
+
+  .flow-eqs {
+    display:flex; gap:4px; flex-wrap:wrap; justify-content:center;
+  }
+
+  .flow-eq {
+    width:28px; height:28px;
+    border-radius:3px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:0.6rem; font-weight:700;
+    border:1px solid;
+    cursor:pointer;
+    transition:transform 0.15s, opacity 0.15s;
+    position:relative;
+  }
+  .flow-eq:hover { transform:scale(1.18); z-index:10; }
+
+  .flow-eq.ga { background:rgba(79,195,247,0.15); border-color:var(--a-grav); color:var(--a-grav); }
+  .flow-eq.gb { background:rgba(255,213,79,0.15);  border-color:var(--b-luz);  color:var(--b-luz); }
+  .flow-eq.gc { background:rgba(129,199,132,0.15); border-color:var(--c-mat);  color:var(--c-mat); }
+  .flow-eq.gd { background:rgba(206,147,216,0.15); border-color:var(--d-ia);   color:var(--d-ia); }
+
+  .arrow {
+    color:var(--dim); font-size:1.2rem; align-self:center;
+    margin-top:16px;
+  }
+
+  .ei-node {
+    width:72px; height:72px;
+    border-radius:50%;
+    border:2px solid var(--ei);
+    background: rgba(255,110,64,0.12);
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    color:var(--ei);
+    font-family:'Orbitron',sans-serif;
+    font-size:0.65rem;
+    font-weight:700;
+    box-shadow: 0 0 20px rgba(255,110,64,0.3);
+    animation: pulse 3s ease-in-out infinite;
+    margin-top:16px;
+    cursor:default;
+  }
+  .ei-node span { font-size:0.5rem; opacity:0.7; letter-spacing:1px; }
+
+  @keyframes pulse {
+    0%,100% { box-shadow:0 0 20px rgba(255,110,64,0.3); }
+    50%      { box-shadow:0 0 40px rgba(255,110,64,0.6), 0 0 80px rgba(255,110,64,0.2); }
+  }
+
+  /* WEIGHTS ROW */
+  .weights-row {
+    grid-column:1/-1;
+    display:grid;
+    grid-template-columns: repeat(4,1fr) 1fr;
+    gap:10px;
+  }
+
+  .weight-card {
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:14px;
+    text-align:center;
+  }
+
+  .weight-label {
+    font-size:0.6rem; letter-spacing:2px; text-transform:uppercase;
+    margin-bottom:8px; opacity:0.7;
+  }
+  .weight-value {
+    font-family:'Orbitron',sans-serif;
+    font-size:1.5rem; font-weight:900;
+    line-height:1;
+    margin-bottom:6px;
+  }
+  .weight-bar-bg {
+    height:4px; border-radius:2px;
+    background:rgba(255,255,255,0.08);
+    overflow:hidden;
+    margin-bottom:6px;
+  }
+  .weight-bar { height:100%; border-radius:2px; }
+  .weight-desc { font-size:0.58rem; color:var(--dim); line-height:1.4; }
+
+  .wa .weight-value { color:var(--a-grav); }
+  .wb .weight-value { color:var(--b-luz); }
+  .wc .weight-value { color:var(--c-mat); }
+  .wd .weight-value { color:var(--d-ia); }
+  .wei .weight-value { color:var(--ei); }
+
+  .wa .weight-bar { background:var(--a-grav); width:45%; }
+  .wb .weight-bar { background:var(--b-luz);  width:10%; }
+  .wc .weight-bar { background:var(--c-mat);  width:30%; }
+  .wd .weight-bar { background:var(--d-ia);   width:15%; }
+  .wei .weight-bar { background:var(--ei);     width:100%; }
+
+  /* COUPLINGS */
+  .couplings {
+    grid-column:1/-1;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:20px;
+  }
+
+  .coup-title {
+    font-family:'Orbitron',sans-serif;
+    font-size:0.6rem; letter-spacing:3px;
+    color:var(--text); margin-bottom:14px;
+  }
+
+  .coup-list { display:flex; flex-direction:column; gap:8px; }
+
+  .coup-item {
+    display:grid;
+    grid-template-columns: 80px 1fr auto;
+    gap:12px; align-items:center;
+    padding:10px 14px;
+    border-radius:3px;
+    border:1px solid;
+  }
+
+  .coup-critical { border-color:rgba(244,67,54,0.4); background:rgba(244,67,54,0.06); }
+  .coup-high     { border-color:rgba(255,152,0,0.4); background:rgba(255,152,0,0.06); }
+  .coup-medium   { border-color:rgba(255,213,79,0.3); background:rgba(255,213,79,0.04); }
+
+  .coup-level {
+    font-size:0.58rem; font-weight:700; letter-spacing:2px;
+    text-transform:uppercase; text-align:center; padding:3px 0;
+    border-radius:2px;
+  }
+  .coup-critical .coup-level { color:#ef5350; }
+  .coup-high     .coup-level { color:#ffa726; }
+  .coup-medium   .coup-level { color:var(--b-luz); }
+
+  .coup-desc { font-size:0.65rem; line-height:1.4; }
+  .coup-value { font-size:0.6rem; color:var(--dim); text-align:right; white-space:nowrap; }
+
+  /* DETAIL PANEL */
+  .detail-panel {
+    grid-column:1/-1;
+    background: var(--panel);
+    border:1px solid rgba(255,110,64,0.3);
+    border-radius:4px;
+    padding:16px 20px;
+    display:none;
+  }
+  .detail-panel.visible { display:block; }
+  .detail-name {
+    font-family:'Orbitron',sans-serif;
+    font-size:0.85rem; font-weight:700;
+    margin-bottom:6px;
+  }
+  .detail-formula {
+    font-size:0.72rem; color:var(--ei);
+    margin-bottom:8px; font-style:italic;
+  }
+  .detail-desc { font-size:0.68rem; color:var(--text); line-height:1.7; }
+  .detail-connections {
+    margin-top:10px; font-size:0.62rem; color:var(--dim);
+  }
+  .detail-connections span {
+    display:inline-block; margin-right:8px; margin-top:4px;
+    padding:2px 8px; border-radius:2px; border:1px solid var(--border);
+    color:var(--text);
+  }
+
+  /* SCF */
+  .scf-row {
+    grid-column:1/-1;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:20px;
+    text-align:center;
+  }
+  .scf-title {
+    font-family:'Orbitron',sans-serif;
+    font-size:0.6rem; letter-spacing:3px; color:var(--dim);
+    margin-bottom:14px;
+  }
+  .scf-steps {
+    display:flex; align-items:center;
+    justify-content:center; flex-wrap:wrap; gap:4px;
+  }
+  .scf-step {
+    padding:8px 12px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--border);
+    border-radius:3px;
+    font-size:0.62rem;
+    line-height:1.5;
+  }
+  .scf-step.highlight { border-color:var(--ei); color:var(--ei); }
+  .scf-arr { color:var(--dim); font-size:1rem; }
+
+  footer {
+    position:relative; z-index:1;
+    text-align:center;
+    padding:20px;
+    border-top:1px solid var(--border);
+    font-size:0.58rem;
+    color:var(--dim);
+    letter-spacing:2px;
+  }
+
+  @media(max-width:768px) {
+    .main { grid-template-columns:1fr 1fr; }
+    .weights-row { grid-template-columns:1fr 1fr; }
+  }
+  @media(max-width:500px) {
+    .main { grid-template-columns:1fr; }
+    .weights-row { grid-template-columns:1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>RED ORBITAL REFLECTORA</h1>
+  <p>Abraham Hernandez — Sistema de Energía Solar Orbital</p>
+  <div class="ei-badge">EIGENVALOR Ei — HILO UNIFICADOR</div>
+</header>
+
+<div class="main">
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--a-grav)"></div>Grupo A — Gravedad</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--b-luz)"></div>Grupo B — Luz/Óptica</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--c-mat)"></div>Grupo C — Materiales</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--d-ia)"></div>Grupo D — IA/Control</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--ei)"></div>Eigenvalor Ei</div>
+    <div style="margin-left:auto; font-size:0.6rem; color:var(--dim)">← Haz clic en cualquier ecuación para ver detalles</div>
+  </div>
+
+  <!-- GROUP A -->
+  <div class="group group-a">
+    <div class="group-header">
+      <span class="group-icon">🪐</span> A — GRAVEDAD
+    </div>
+    <div class="eq-list" id="list-a"></div>
+  </div>
+
+  <!-- GROUP B -->
+  <div class="group group-b">
+    <div class="group-header">
+      <span class="group-icon">☀️</span> B — LUZ
+    </div>
+    <div class="eq-list" id="list-b"></div>
+  </div>
+
+  <!-- GROUP C -->
+  <div class="group group-c">
+    <div class="group-header">
+      <span class="group-icon">🧪</span> C — MATERIALES
+    </div>
+    <div class="eq-list" id="list-c"></div>
+  </div>
+
+  <!-- GROUP D -->
+  <div class="group group-d">
+    <div class="group-header">
+      <span class="group-icon">🤖</span> D — IA
+    </div>
+    <div class="eq-list" id="list-d"></div>
+  </div>
+
+  <!-- DETAIL PANEL -->
+  <div class="detail-panel" id="detail-panel">
+    <div class="detail-name" id="d-name"></div>
+    <div class="detail-formula" id="d-formula"></div>
+    <div class="detail-desc" id="d-desc"></div>
+    <div class="detail-connections">
+      Conecta con: <span id="d-connections"></span>
+    </div>
+  </div>
+
+  <!-- FLOW DIAGRAM -->
+  <div class="flow-row">
+    <div class="flow-box">
+      <div class="flow-title">FLUJO DE DATOS → EIGENVALOR Ei</div>
+      <div class="flow">
+
+        <div class="flow-group">
+          <div class="flow-group-label" style="color:var(--a-grav)">Gravedad</div>
+          <div class="flow-eqs">
+            <div class="flow-eq ga" title="HCW">1</div>
+            <div class="flow-eq ga" title="Newton Grav">2</div>
+            <div class="flow-eq ga" title="Kepler">3</div>
+            <div class="flow-eq ga" title="F=ma">4</div>
+            <div class="flow-eq ga" title="Euler-Lagrange">5</div>
+            <div class="flow-eq ga" title="Roche">6</div>
+          </div>
+          <div class="flow-group-label" style="margin-top:4px;color:var(--a-grav)">Egrav → α=0.45</div>
+        </div>
+
+        <div class="arrow">→</div>
+
+        <div class="flow-group">
+          <div class="flow-group-label" style="color:var(--b-luz)">Luz</div>
+          <div class="flow-eqs">
+            <div class="flow-eq gb" title="Reflexión">7</div>
+            <div class="flow-eq gb" title="Presión rad.">8</div>
+            <div class="flow-eq gb" title="Lambert">9</div>
+            <div class="flow-eq gb" title="Fresnel">10</div>
+            <div class="flow-eq gb" title="Difracción">11</div>
+          </div>
+          <div class="flow-group-label" style="margin-top:4px;color:var(--b-luz)">Eluz → β=0.10</div>
+        </div>
+
+        <div class="arrow">→</div>
+
+        <div class="flow-group">
+          <div class="flow-group-label" style="color:var(--c-mat)">Materiales</div>
+          <div class="flow-eqs">
+            <div class="flow-eq gc" title="Hooke">12</div>
+            <div class="flow-eq gc" title="Ohm">13</div>
+            <div class="flow-eq gc" title="Maxwell">14</div>
+            <div class="flow-eq gc" title="Difusión calor">15</div>
+            <div class="flow-eq gc" title="Young">16</div>
+          </div>
+          <div class="flow-group-label" style="margin-top:4px;color:var(--c-mat)">Emat → γ=0.30 ⚠️CRÍTICO</div>
+        </div>
+
+        <div class="arrow">→</div>
+
+        <div class="flow-group">
+          <div class="flow-group-label" style="color:var(--d-ia)">IA</div>
+          <div class="flow-eqs">
+            <div class="flow-eq gd" title="Kalman">17</div>
+            <div class="flow-eq gd" title="Consenso">18</div>
+            <div class="flow-eq gd" title="Función costo">19</div>
+            <div class="flow-eq gd" title="Fourier">20</div>
+          </div>
+          <div class="flow-group-label" style="margin-top:4px;color:var(--d-ia)">EIA → δ=0.15</div>
+        </div>
+
+        <div class="arrow">→</div>
+
+        <div class="flow-group">
+          <div class="ei-node">Ei<span>NODO</span></div>
+          <div class="flow-group-label" style="margin-top:6px;color:var(--ei)">SCF converge</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- WEIGHTS -->
+  <div class="weights-row">
+    <div class="weight-card wa">
+      <div class="weight-label">α — Gravedad</div>
+      <div class="weight-value">0.45</div>
+      <div class="weight-bar-bg"><div class="weight-bar"></div></div>
+      <div class="weight-desc">Egrav ≈ 4,345 J<br>Contribución: 1,955 J</div>
+    </div>
+    <div class="weight-card wb">
+      <div class="weight-label">β — Luz</div>
+      <div class="weight-value">0.10</div>
+      <div class="weight-bar-bg"><div class="weight-bar"></div></div>
+      <div class="weight-desc">P.rad ≈ 4.5 µPa<br>Contribución: 84 J</div>
+    </div>
+    <div class="weight-card wc">
+      <div class="weight-label">γ — Materiales</div>
+      <div class="weight-value">0.30</div>
+      <div class="weight-bar-bg"><div class="weight-bar"></div></div>
+      <div class="weight-desc">Emat ≈ 5.28 MJ<br>⚠️ 99% del Ei total</div>
+    </div>
+    <div class="weight-card wd">
+      <div class="weight-label">δ — IA</div>
+      <div class="weight-value">0.15</div>
+      <div class="weight-bar-bg"><div class="weight-bar"></div></div>
+      <div class="weight-desc">EIA ≈ 0.0025 J<br>Pequeño pero decisivo</div>
+    </div>
+    <div class="weight-card wei">
+      <div class="weight-label">Σ — Total Ei</div>
+      <div class="weight-value">1.00</div>
+      <div class="weight-bar-bg"><div class="weight-bar"></div></div>
+      <div class="weight-desc">α+β+γ+δ normalizado<br>Indicador de estado nodo</div>
+    </div>
+  </div>
+
+  <!-- COUPLINGS -->
+  <div class="couplings">
+    <div class="coup-title">⚡ ACOPLAMIENTOS ENTRE GRUPOS</div>
+    <div class="coup-list">
+      <div class="coup-item coup-critical">
+        <div class="coup-level">CRÍTICO</div>
+        <div class="coup-desc">B→C: El calor generado por la luz daña el plástico antes de que Kalman reaccione. La membrana puede degradarse en milisegundos mientras el sistema aún procesa la corrección.</div>
+        <div class="coup-value">Ecs. 9,15<br>Lag térmico</div>
+      </div>
+      <div class="coup-item coup-high">
+        <div class="coup-level">ALTO</div>
+        <div class="coup-desc">C→B: La temperatura +120°C cambia la reflectividad R del grafeno. El haz de luz pierde puntería sobre el receptor terrestre al variar el ángulo de reflexión real.</div>
+        <div class="coup-value">Ecs. 7,12,15<br>ΔR(T)</div>
+      </div>
+      <div class="coup-item coup-medium">
+        <div class="coup-level">MEDIO</div>
+        <div class="coup-desc">B→A: La presión de radiación acumula deriva orbital. 4.5 µPa durante 30 días produce ~2.2 km de desplazamiento. HCW debe compensar continuamente.</div>
+        <div class="coup-value">Ecs. 1,8<br>2.2 km/mes</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCF CYCLE -->
+  <div class="scf-row">
+    <div class="scf-title">CICLO SCF — CONVERGENCIA DEL EIGENVALOR</div>
+    <div class="scf-steps">
+      <div class="scf-step">Inicializar<br>pesos α,β,γ,δ</div>
+      <div class="scf-arr">→</div>
+      <div class="scf-step">Calcular<br>Egrav (A)</div>
+      <div class="scf-arr">→</div>
+      <div class="scf-step">Calcular<br>Eluz (B)</div>
+      <div class="scf-arr">→</div>
+      <div class="scf-step">Calcular<br>Emat (C)</div>
+      <div class="scf-arr">→</div>
+      <div class="scf-step">Calcular<br>EIA (D)</div>
+      <div class="scf-arr">→</div>
+      <div class="scf-step highlight">Ei(n) =<br>αEgrav+βEluz<br>+γEmat+δEIA</div>
+      <div class="scf-arr">→</div>
+      <div class="scf-step">|Ei(n)−Ei(n−1)|<br>< 0.001?</div>
+      <div class="scf-arr">↙ No</div>
+      <div class="scf-step highlight">✓ CONVERGE<br>Red estable<br>→ Refleja</div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  RED ORBITAL REFLECTORA — ABRAHAM HERNANDEZ — 2026 &nbsp;|&nbsp; SISTEMA Ei UNIFICADOR
+</footer>
+
+<script>
+const equations = {
+  a: [
+    { n:1, name:"Hill-Clohessy-Wiltshire", formula:"ẍ − 2nẏ − 3n²x = ux", role:"Ecuación base de movimiento relativo de cada nodo dentro del enjambre orbital.", connects:"→ F=ma (4), Filtro Kalman (17)" },
+    { n:2, name:"Ley de Gravitación Universal", formula:"F = G·m₁m₂/r²", role:"Calcula la atracción gravitacional exacta sobre cada nodo satelite según su altitud LEO.", connects:"→ HCW (1), Kepler (3)" },
+    { n:3, name:"Ecuación de Kepler", formula:"M = E − e·sin(E)", role:"Predice la trayectoria orbital completa del enjambre alrededor del planeta. Ciclo de 90 min.", connects:"→ HCW (1), Kalman (17)" },
+    { n:4, name:"Segunda Ley de Newton (F=ma)", formula:"F = m·a", role:"Determina la fuerza necesaria en los propulsores para corregir desviaciones de posición.", connects:"→ HCW (1), Euler-Lagrange (5), Consenso (18)" },
+    { n:5, name:"Euler-Lagrange", formula:"d/dt(∂L/∂q̇) − ∂L/∂q = 0", role:"La red busca automáticamente la configuración que minimiza el gasto energético total.", connects:"→ Función de Costo (19), HCW (1)" },
+    { n:6, name:"Límite de Roche", formula:"d = a·(2M/m)^(1/3)", role:"Garantiza que la red no entre en zona de marea gravitacional destructiva. LEO está en zona segura.", connects:"→ Kepler (3), Hooke (12)" },
+  ],
+  b: [
+    { n:7, name:"Ley de Reflexión", formula:"θᵢ = θᵣ", role:"Garantiza que el haz reflejado alcance exactamente el receptor terrestre con precisión milimétrica.", connects:"→ Lambert (9), Difracción (11), Fresnel (10)" },
+    { n:8, name:"Presión de Radiación", formula:"P = I/c", role:"Usa la luz solar como propulsión auxiliar (velas solares). Acumula 2.2 km de deriva en 30 días.", connects:"→ HCW (1), Kalman (17)" },
+    { n:9, name:"Ley de Lambert", formula:"I = I₀·cos(θ)", role:"Calcula la pérdida de energía al reflejar en el plástico según el ángulo de incidencia.", connects:"→ Difusión Calor (15), Reflexión (7)" },
+    { n:10, name:"Lentes de Fresnel", formula:"f = r²/(2λ)", role:"Concentra la luz reflejada como una lupa cuando se requiere mayor densidad energética en el receptor.", connects:"→ Reflexión (7), Difracción (11)" },
+    { n:11, name:"Ecuación de Difracción", formula:"sinθ = mλ/d", role:"Evita que el haz se disperse durante los ~400 km de trayecto hasta la superficie terrestre.", connects:"→ Reflexión (7), Fresnel (10)" },
+  ],
+  c: [
+    { n:12, name:"Ley de Hooke (Tensores)", formula:"σ = E·ε", role:"Mide el estiramiento y tensión del plástico reciclado en la membrana bajo presión orbital.", connects:"→ Módulo Young (16), Difusión Calor (15)" },
+    { n:13, name:"Ley de Ohm", formula:"V = I·R", role:"Controla la corriente en los hilos de grafito que distribuyen calor y señales entre nodos.", connects:"→ Maxwell (14), Difusión Calor (15)" },
+    { n:14, name:"Ecuaciones de Maxwell", formula:"∇×B = μ₀J + μ₀ε₀∂E/∂t", role:"Permite transferencia de energía entre nodos adyacentes por inducción, sin cables físicos.", connects:"→ Ohm (13), Fourier (20)" },
+    { n:15, name:"Difusión de Calor", formula:"∂T/∂t = α∇²T", role:"COMPONENTE CRÍTICO. Evita que el ciclo +120°C/-100°C derrita el plástico. Domina el 99% de Ei.", connects:"→ Hooke (12), Lambert (9), Reflexión (7)" },
+    { n:16, name:"Módulo de Young", formula:"E = σ/ε", role:"Define la rigidez óptima de la telaraña orbital para mantener tensión sin fractura.", connects:"→ Hooke (12), Límite Roche (6)" },
+  ],
+  d: [
+    { n:17, name:"Filtro de Kalman", formula:"K = PH'(HPH'+R)⁻¹", role:"Permite a cada nodo saber su posición exacta filtrando el ruido electromagnético espacial.", connects:"→ Consenso (18), HCW (1), Kepler (3)" },
+    { n:18, name:"Algoritmo de Consenso", formula:"xᵢ(t+1) = Σⱼ wᵢⱼ·xⱼ(t)", role:"Todos los nodos del enjambre se sincronizan en milisegundos para coordinar orientación.", connects:"→ Kalman (17), Función Costo (19)" },
+    { n:19, name:"Función de Costo", formula:"min J = Σ(xₜ−x*)²+λu²", role:"Elige la trayectoria más eficiente en combustible para enviar la luz al destino programado.", connects:"→ Euler-Lagrange (5), Consenso (18)" },
+    { n:20, name:"Transformada de Fourier", formula:"F(ω) = ∫f(t)e^{-iωt}dt", role:"Procesa señales de radio y luz provenientes de los receptores terrestres para ajuste en tiempo real.", connects:"→ Maxwell (14), Kalman (17)" },
+  ]
+};
+
+function renderList(group, containerId) {
+  const data = equations[group];
+  const container = document.getElementById(containerId);
+  data.forEach(eq => {
+    const div = document.createElement('div');
+    div.className = 'eq-item';
+    div.dataset.group = group;
+    div.dataset.n = eq.n;
+    div.innerHTML = `
+      <div class="eq-num">EC. ${String(eq.n).padStart(2,'0')}</div>
+      <div class="eq-name">${eq.name}</div>
+      <div class="eq-role">${eq.role}</div>
+    `;
+    div.addEventListener('click', () => showDetail(eq, group, div));
+    container.appendChild(div);
+  });
+}
+
+function showDetail(eq, group, el) {
+  // toggle active
+  document.querySelectorAll('.eq-item').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+
+  const panel = document.getElementById('detail-panel');
+  panel.className = 'detail-panel visible';
+  document.getElementById('d-name').textContent = `Ec. ${eq.n} — ${eq.name}`;
+  document.getElementById('d-name').style.color = `var(--${group === 'a' ? 'a-grav' : group === 'b' ? 'b-luz' : group === 'c' ? 'c-mat' : 'd-ia'})`;
+  document.getElementById('d-formula').textContent = eq.formula;
+  document.getElementById('d-desc').textContent = eq.role;
+  document.getElementById('d-connections').textContent = eq.connects;
+}
+
+renderList('a','list-a');
+renderList('b','list-b');
+renderList('c','list-c');
+renderList('d','list-d');
+
+// flow-eq tooltips highlight
+document.querySelectorAll('.flow-eq').forEach(el => {
+  el.addEventListener('mouseenter', function() {
+    this.style.opacity = '1';
+  });
+});
+</script>
+</body>
+</html>
